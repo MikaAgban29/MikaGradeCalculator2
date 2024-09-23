@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Calculator</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8a3b2, #c77dff);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        input[type="number"] {
+            width: calc(100% - 16px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #d75a99;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus {
+            border-color: #ab2b74;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #d75a99;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #ab2b74;
+        }
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .passed {
+            background-color: #f0e6f6;
+            color: #6f42c1;
+        }
+        .failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: #d75a99;">Grade Calculator</h1>
+    <input type="number" id="attendance" placeholder="Attendance (0-4)" max="4" min="0" />
+    <input type="number" id="recitation" placeholder="Recitation" />
+    <input type="number" id="quiz" placeholder="Quiz" />
+    <input type="number" id="requirements" placeholder="Requirements" />
+    <input type="number" id="prelim_exam" placeholder="Prelim Exam" />
+    <button id="calculateButton">Calculate Grades</button>
+
+    <div id="result" class="result">
+        <p id="resultText"></p>
+    </div>
+
+    <py-script>
+        from pyscript import Element
+
+        def calculate_grades(event):
+            try:
+                # Get values from inputs
+                attendance_absences = int(Element("attendance").element.value)
+                recitation = float(Element("recitation").element.value)
+                quiz = float(Element("quiz").element.value)
+                requirements = float(Element("requirements").element.value)
+                prelim_exam = float(Element("prelim_exam").element.value)
+
+                # Attendance calculation
+                attendance = 100 - (attendance_absences * 10)
+                if attendance_absences >= 4:
+                    result_text = "FAILED due to an excessive number of absences."
+                    Element("resultText").element.innerHTML = result_text
+                    Element("result").element.className = "failed"
+                    Element("result").element.style.display = "block"
+                    return
+
+                # Class Standing Calculation
+                class_standing = (quiz * 0.4) + (requirements * 0.3) + (recitation * 0.3)
+
+                # Prelim Grade Calculation
+                prelim_grade = (0.6 * prelim_exam) + (0.1 * attendance) + (0.3 * class_standing)
+
+                # Overall Grade Calculation (assuming Midterm and Final grades are inputs)
+                overall_grade = (0.2 * prelim_grade) + (0.3 * 0) + (0.5 * 0)  # Modify as needed for midterms and finals
+
+                # Determine pass/fail and required grades for Dean’s List
+                result_element = Element("result").element
+                if prelim_grade < 75:
+                    result_element.className = "failed"
+                    result_text = f"Your Prelim Grade is: {prelim_grade:.2f} - FAILED"
+                else:
+                    result_element.className = "passed"
+                    result_text = f"Your Prelim Grade is: {prelim_grade:.2f} - PASSED"
+
+                # Calculate required Midterm and Final Grades
+                passing_midterm_grade = (75 - (0.2 * prelim_grade)) / 0.3
+                dean_list_midterm_grade = (90 - (0.2 * prelim_grade)) / 0.3
+
+                result_text += f"<br>Required Midterm Grade for Passing: {max(passing_midterm_grade, 0):.2f}"
+                result_text += f"<br>Required Midterm Grade for Dean's List: {max(dean_list_midterm_grade, 0):.2f}"
+
+                # Update the content of the result element
+                Element("resultText").element.innerHTML = result_text
+
+                # Show the result section
+                result_element.style.display = "block"
+            except ValueError:
+                Element("resultText").element.innerHTML = "Invalid input. Please enter numbers only."
+                Element("result").element.style.display = "block"
+
+        # Attach event listener to the button
+        Element("calculateButton").element.onclick = calculate_grades
+    </py-script>
+</body>
+</html>
